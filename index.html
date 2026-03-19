@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Receptionist Prototype</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,0.06);
+      --panel-strong: rgba(255,255,255,0.1);
+      --text: #e8ecf3;
+      --muted: #a9b3c7;
+      --line: rgba(255,255,255,0.12);
+      --accent: #7dd3fc;
+      --accent-2: #a78bfa;
+      --ok: #86efac;
+      --shadow: 0 20px 60px rgba(0,0,0,0.35);
+      --radius: 24px;
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(125, 211, 252, 0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.18), transparent 30%),
+        linear-gradient(180deg, #0b1020 0%, #0d1327 100%);
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .wrap { width: min(var(--max), calc(100% - 32px)); margin: 0 auto; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(12px);
+      background: rgba(11, 16, 32, 0.72);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid;
+      place-items: center;
+      color: #09101d;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+
+    .hero {
+      padding: 84px 0 56px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      padding: 40px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(125, 211, 252, 0.12);
+      border: 1px solid rgba(125, 211, 252, 0.25);
+      color: #c7f0ff;
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.3rem, 5vw, 4.3rem);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+
+    .lead {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+      max-width: 56ch;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-weight: 600;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #081120;
+      border-color: transparent;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+    }
+
+    .hero-panel {
+      padding: 26px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+    }
+
+    .status strong { display: block; font-size: 15px; }
+    .status span { color: var(--muted); font-size: 13px; }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 18px rgba(134,239,172,0.7);
+      flex: 0 0 auto;
+    }
+
+    .code-window {
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #0a0f1d;
+    }
+
+    .code-bar {
+      display: flex;
+      gap: 8px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ball {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.22);
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      color: #d8e6ff;
+      font-size: 13px;
+      line-height: 1.7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    section {
+      padding: 24px 0 18px;
+    }
+
+    .section-head {
+      margin-bottom: 18px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(1.7rem, 3vw, 2.6rem);
+      letter-spacing: -0.03em;
+    }
+
+    .section-head p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 70ch;
+      line-height: 1.7;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .feature {
+      padding: 24px;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.18), rgba(167, 139, 250, 0.18));
+      margin-bottom: 14px;
+      font-weight: 700;
+      color: #dbeafe;
+    }
+
+    .feature h3 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .how {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .step {
+      padding: 24px;
+      position: relative;
+    }
+
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: rgba(125,211,252,0.12);
+      border: 1px solid rgba(125,211,252,0.25);
+      color: #dff6ff;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .step h3 { margin: 0 0 10px; }
+    .step p { margin: 0; color: var(--muted); line-height: 1.7; }
+
+    .faq {
+      display: grid;
+      gap: 14px;
+    }
+
+    details {
+      padding: 18px 20px;
+      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    details p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .footer {
+      padding: 42px 0 64px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer-box {
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .grid-3,
+      .how { grid-template-columns: 1fr; }
+      .hero-copy, .hero-panel { padding: 26px; }
+    }
+
+    @media (max-width: 640px) {
+      .nav-inner { align-items: flex-start; }
+      .cta-row { flex-direction: column; }
+      .btn { width: 100%; }
+      .hero { padding-top: 52px; }
+      .wrap { width: min(var(--max), calc(100% - 20px)); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand">
+        <div class="brand-mark">AI</div>
+        <div>AI Receptionist Prototype</div>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <div class="card hero-copy">
+        <div class="eyebrow">Voice + SMS workflow • Local prototype in active development</div>
+        <h1>Never miss a call again with an AI receptionist.</h1>
+        <p class="lead">
+          This prototype answers incoming calls, captures caller details, routes messages, and supports automated text follow-up workflows for small service businesses.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#features">See core features</a>
+          <a class="btn btn-secondary" href="#faq">View current status</a>
+        </div>
+      </div>
+
+      <div class="card hero-panel">
+        <div class="status">
+          <div>
+            <strong>Prototype status</strong>
+            <span>Backend scaffolded and running locally</span>
+          </div>
+          <div class="dot"></div>
+        </div>
+        <div class="status">
+          <div>
+            <strong>Core stack</strong>
+            <span>Python, Flask, Twilio webhooks, SQLite</span>
+          </div>
+        </div>
+        <div class="status">
+          <div>
+            <strong>Use case</strong>
+            <span>Missed call capture, lead intake, and SMS confirmation</span>
+          </div>
+        </div>
+        <div class="code-window">
+          <div class="code-bar">
+            <div class="ball"></div>
+            <div class="ball"></div>
+            <div class="ball"></div>
+          </div>
+<pre>POST /voice
+POST /sms
+POST /voice/recording
+
+Lead workflow
+1. Caller reaches business line
+2. AI receptionist answers
+3. Caller info is captured
+4. Message is stored and routed
+5. SMS follow-up can be triggered</pre>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Built for practical business communication</h2>
+        <p>
+          The goal of this prototype is simple: help local businesses handle more inbound calls without relying on missed voicemails, manual follow-up, or inconsistent response time.
+        </p>
+      </div>
+      <div class="grid-3">
+        <article class="card feature">
+          <div class="feature-icon">01</div>
+          <h3>Inbound call handling</h3>
+          <p>The system is designed to answer incoming voice calls and return TwiML instructions for guided call handling.</p>
+        </article>
+        <article class="card feature">
+          <div class="feature-icon">02</div>
+          <h3>SMS follow-up</h3>
+          <p>Text message workflows can confirm receipt, provide next steps, or notify the business owner that a new lead has arrived.</p>
+        </article>
+        <article class="card feature">
+          <div class="feature-icon">03</div>
+          <h3>Lead capture</h3>
+          <p>Caller details and message events are structured for storage so follow-up can be tracked instead of lost.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How the workflow works</h2>
+        <p>
+          The current build focuses on a straightforward webhook-based flow that can later be expanded into a full service offering.
+        </p>
+      </div>
+      <div class="how">
+        <article class="card step">
+          <div class="step-num">1</div>
+          <h3>Incoming contact</h3>
+          <p>A caller or texter reaches the Twilio number assigned to the workflow.</p>
+        </article>
+        <article class="card step">
+          <div class="step-num">2</div>
+          <h3>Webhook handling</h3>
+          <p>The request is sent to a Flask backend endpoint such as <strong>/voice</strong> or <strong>/sms</strong> for processing.</p>
+        </article>
+        <article class="card step">
+          <div class="step-num">3</div>
+          <h3>Business follow-up</h3>
+          <p>The system responds, stores the interaction, and prepares the next action for the business owner or customer.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Current project FAQ</h2>
+        <p>
+          A plain-language snapshot of what this project is and how it is being tested right now.
+        </p>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>What is this website for?</summary>
+          <p>This page documents a working prototype for an AI receptionist workflow that uses Twilio voice and SMS with a Python Flask backend.</p>
+        </details>
+        <details>
+          <summary>Is this live in production yet?</summary>
+          <p>No. The prototype is currently being developed and tested locally. It is not yet a public production service.</p>
+        </details>
+        <details>
+          <summary>What types of messages are planned?</summary>
+          <p>Example outbound SMS: Hello, this is the automated receptionist. We received your call and will contact you shortly.</p>
+        </details>
+        <details>
+          <summary>Who is this intended for?</summary>
+          <p>The prototype is being built for small service businesses that need a better way to capture calls, messages, and customer follow-up.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="card footer-box">
+        <div>
+          <strong>AI Receptionist Prototype</strong><br />
+          Local development project using Twilio, Flask, and webhook-based call handling.
+        </div>
+        <div>
+          <a class="btn btn-secondary" href="#top">Back to top</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
